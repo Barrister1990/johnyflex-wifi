@@ -4,6 +4,7 @@ import {
   mikrotikAddIpBinding,
   mikrotikApplySimpleQueue,
   mikrotikRemoveActiveByMac,
+  mikrotikRemoveHotspotHostByMac,
   mikrotikRemoveHotspotUserForSession,
   mikrotikRemoveIpBindingByMac,
   mikrotikRemoveIpBindingBySessionId,
@@ -78,7 +79,8 @@ export async function authorizeSessionAccess(
   const unlockTimeoutMs = 4_000;
 
   try {
-    // Critical path only — this is what opens the internet for the phone.
+    // Critical path — bypass binding opens internet; kicking host/active makes
+    // captive browsers notice in ~1s instead of waiting for OS re-probe.
     await mikrotikAddIpBinding(
       config,
       {
@@ -88,6 +90,12 @@ export async function authorizeSessionAccess(
       },
       { timeoutMs: unlockTimeoutMs },
     );
+    await Promise.all([
+      mikrotikRemoveActiveByMac(config, mac, { timeoutMs: unlockTimeoutMs }),
+      mikrotikRemoveHotspotHostByMac(config, mac, {
+        timeoutMs: unlockTimeoutMs,
+      }),
+    ]);
   } catch (error) {
     const detail =
       error instanceof Error ? error.message : "RouterOS REST failed";

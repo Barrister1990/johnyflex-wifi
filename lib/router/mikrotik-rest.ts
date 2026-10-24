@@ -547,19 +547,49 @@ export async function mikrotikRemoveHotspotUserForSession(
 export async function mikrotikRemoveActiveByMac(
   cfg: MikroTikConfig,
   macAddress: string,
+  opts?: { timeoutMs?: number },
 ): Promise<void> {
+  const timeoutMs = opts?.timeoutMs ?? 4_000;
+  const mac = macAddress.toLowerCase();
   try {
     const list = await restFetch<
       Array<{ ".id"?: string; "mac-address"?: string }>
-    >(cfg, "/rest/ip/hotspot/active");
+    >(cfg, "/rest/ip/hotspot/active", { timeoutMs });
     const rows = Array.isArray(list) ? list : [];
     for (const row of rows) {
-      if (
-        (row["mac-address"] ?? "").toLowerCase() === macAddress.toLowerCase() &&
-        row[".id"]
-      ) {
+      if ((row["mac-address"] ?? "").toLowerCase() === mac && row[".id"]) {
         await restFetch(cfg, `/rest/ip/hotspot/active/${row[".id"]}`, {
           method: "DELETE",
+          timeoutMs,
+        });
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * Drop captive Hotspot host rows for a MAC so the phone rebinds under a
+ * bypassed IP-binding immediately (avoids multi-minute captive wait).
+ */
+export async function mikrotikRemoveHotspotHostByMac(
+  cfg: MikroTikConfig,
+  macAddress: string,
+  opts?: { timeoutMs?: number },
+): Promise<void> {
+  const timeoutMs = opts?.timeoutMs ?? 4_000;
+  const mac = macAddress.toLowerCase();
+  try {
+    const list = await restFetch<
+      Array<{ ".id"?: string; "mac-address"?: string }>
+    >(cfg, "/rest/ip/hotspot/host", { timeoutMs });
+    const rows = Array.isArray(list) ? list : [];
+    for (const row of rows) {
+      if ((row["mac-address"] ?? "").toLowerCase() === mac && row[".id"]) {
+        await restFetch(cfg, `/rest/ip/hotspot/host/${row[".id"]}`, {
+          method: "DELETE",
+          timeoutMs,
         });
       }
     }
