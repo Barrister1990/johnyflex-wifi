@@ -1,0 +1,378 @@
+@import "tailwindcss";
+
+:root {
+  /* JohnnyFlex brand — https://johnyflex.vercel.app/ */
+  --brand: #c8f542;
+  --brand-ink: #041a12;
+  --brand-mid: #0d3d2c;
+  --brand-edge: #041a1247;
+
+  --bg-canvas: #f3f6f3;
+  --bg-surface: #e8eee9;
+  --bg-inset: #dce5de;
+  --text-primary: #0c1210;
+  --text-secondary: #2a3530;
+  --text-muted: #5c6b63;
+  --border-subtle: #041a121f;
+  --accent-primary: #041a12;
+  --accent-success: #16a34a;
+  --accent-danger: #dc2626;
+  --shadow-soft: 0 1px 0 #041a120a;
+
+  /* Marketing / portal surfaces */
+  --land-bg: #dce5de;
+  --land-ink: #041a12;
+  --land-muted: #5c6b63;
+  --land-card-yellow: #c8f542;
+  --land-card-pink: #0d3d2c;
+  --land-card-blue: #c5d2c8;
+  --land-card-lavender: #e8eee9;
+  --land-glow: #c8f542;
+
+  /* Mobile-first type */
+  --text-2xs: 0.625rem;
+  --text-xs-tight: 0.6875rem;
+  --text-body: 0.8125rem;
+  --text-body-lg: 0.875rem;
+  --text-title: 0.9375rem;
+  --text-h2: 1.375rem;
+  --text-h1: 1.625rem;
+  --text-display: 1.75rem;
+  --text-metric: 1.5rem;
+  --section-y: 2.5rem;
+  --page-x: 1rem;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --text-2xs: 0.6875rem;
+    --text-xs-tight: 0.75rem;
+    --text-body: 0.9375rem;
+    --text-body-lg: 1rem;
+    --text-title: 1.125rem;
+    --text-h2: 1.875rem;
+    --text-h1: 2.75rem;
+    --text-display: 3.25rem;
+    --text-metric: 2rem;
+    --section-y: 5.5rem;
+    --page-x: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --text-h1: 3.25rem;
+    --text-display: 3.75rem;
+    --text-metric: 2.25rem;
+    --section-y: 6.5rem;
+    --page-x: 4rem;
+  }
+}
+
+@theme inline {
+  --color-canvas: var(--bg-canvas);
+  --color-surface: var(--bg-surface);
+  --color-inset: var(--bg-inset);
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-border: var(--border-subtle);
+  --color-accent: var(--accent-primary);
+  --color-success: var(--accent-success);
+  --color-danger: var(--accent-danger);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-mid: var(--brand-mid);
+  --color-land: var(--land-bg);
+  --color-land-ink: var(--land-ink);
+  --color-land-muted: var(--land-muted);
+  --color-land-yellow: var(--land-card-yellow);
+  --color-land-pink: var(--land-card-pink);
+  --color-land-blue: var(--land-card-blue);
+  --color-land-lavender: var(--land-card-lavender);
+  --color-land-glow: var(--land-glow);
+  --font-sans: var(--font-plex);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-display: var(--font-display);
+}
+
+body {
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-plex), system-ui, sans-serif;
+  font-size: var(--text-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-plex), system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.text-2xs {
+  font-size: var(--text-2xs);
+  line-height: 1.35;
+}
+
+.text-xs-tight {
+  font-size: var(--text-xs-tight);
+  line-height: 1.4;
+}
+
+.text-body {
+  font-size: var(--text-body);
+  line-height: 1.55;
+}
+
+.text-body-lg {
+  font-size: var(--text-body-lg);
+  line-height: 1.6;
+}
+
+.text-title {
+  font-size: var(--text-title);
+  line-height: 1.35;
+}
+
+.text-h2 {
+  font-size: var(--text-h2);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.text-h1 {
+  font-size: var(--text-h1);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.text-display {
+  font-size: var(--text-display);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.text-metric {
+  font-size: var(--text-metric);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.section-y {
+  padding-block: var(--section-y);
+}
+
+.page-x {
+  padding-inline: var(--page-x);
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 28s linear infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out both;
+}
+
+.animate-fade-up-delay {
+  animation: fade-up 0.7s ease-out 0.12s both;
+}
+
+.animate-fade-up-delay-2 {
+  animation: fade-up 0.75s ease-out 0.22s both;
+}
+
+@keyframes login-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, -3%, 0) scale(1.04);
+  }
+}
+
+.animate-login-drift {
+  animation: login-drift 18s ease-in-out infinite;
+}
+
+.animate-login-drift-slow {
+  animation: login-drift 22s ease-in-out infinite reverse;
+}
+
+.animate-login-drift-slower {
+  animation: login-drift 26s ease-in-out infinite;
+}
+
+@keyframes brand-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.animate-brand-pulse {
+  animation: brand-pulse 4.5s ease-in-out infinite;
+}
+
+/* Captive portal — mobile-first */
+.portal-page {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  font-family: var(--font-plex), system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.portal-page .font-display {
+  font-family: var(--font-display), var(--font-plex), system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.portal-field {
+  font-size: 16px !important;
+  line-height: 1.35;
+  transform: translateZ(0);
+}
+
+.portal-shell {
+  font-size: 14px;
+}
+
+.portal-cta {
+  min-height: 48px;
+}
+
+@media (max-width: 639px) {
+  .portal-shell {
+    max-width: none;
+  }
+}
+
+/* Voucher print sheets — 4 vertical columns, many small cut tickets per A4 */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 5mm;
+  }
+
+  html,
+  body {
+    background: white !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .voucher-print-root {
+    display: block !important;
+  }
+
+  .voucher-print-page {
+    break-after: page;
+    page-break-after: always;
+    width: 100%;
+    height: 287mm;
+  }
+
+  .voucher-print-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .voucher-print-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+    width: 100%;
+    height: 100%;
+    gap: 0;
+  }
+
+  .voucher-print-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 1.5mm 2mm;
+    border-right: 0.4pt dashed #888;
+    border-bottom: 0.4pt dashed #888;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .voucher-print-card:nth-child(4n) {
+    border-right: none;
+  }
+
+  .voucher-print-card:nth-child(n + 37) {
+    border-bottom: none;
+  }
+
+  .voucher-print-empty {
+    border-color: #ddd;
+  }
+
+  .voucher-print-brand {
+    margin: 0;
+    font-size: 6.5pt;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #666;
+    line-height: 1.1;
+  }
+
+  .voucher-print-code {
+    margin: 1.2mm 0 0.8mm;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11pt;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: #111;
+    line-height: 1.15;
+  }
+
+  .voucher-print-meta {
+    margin: 0;
+    font-size: 6.5pt;
+    color: #444;
+    line-height: 1.2;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .voucher-print-hint {
+    margin: 0.6mm 0 0;
+    font-size: 5.5pt;
+    color: #777;
+    line-height: 1.1;
+  }
+}

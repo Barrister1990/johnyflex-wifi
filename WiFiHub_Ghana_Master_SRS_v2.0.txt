@@ -1,0 +1,382 @@
+WiFiHub Ghana Master Software Requirements Specification (Version 2.1)
+
+This document expands Version 2.0 with product features for Ghana
+hotspot operators, cafés, schools, churches, hostels, transport
+terminals, communities, and resellers.
+
+================================================================== 1.
+PRODUCT SUMMARY
+==================================================================
+
+WiFiHub Ghana is a cloud-based Wi-Fi hotspot billing platform operated by
+a SINGLE company (one operator account). That company can run many
+locations (Accra, Kumasi, Takoradi, Tamale, …), sell prepaid packages,
+vouchers, and monthly subscriptions, accept Paystack, and attach routers
+(MikroTik first). It is NOT a multi-tenant SaaS marketplace for unrelated
+operators.
+
+Owners manage multiple locations from one dashboard. Customers buy or
+renew access, view usage, download receipts, and manage devices through
+a self-service portal. Hardware (Starlink backhaul, MikroTik, UniFi,
+etc.) attaches through a router abstraction layer so business logic
+never depends on a single vendor.
+
+Development Phase:
+- Router hardware is NOT required.
+- Router actions are simulated using a Router Integration Layer.
+- Local JWT auth + JSON file store may be used before Supabase.
+
+Production Phase:
+- Support MikroTik first.
+- Future adapters: UniFi, pfSense, OpenWrt, Starlink-aware backhaul.
+- Supabase PostgreSQL + Auth, Vercel hosting.
+
+================================================================== 2.
+TECHNOLOGY STACK
+==================================================================
+
+Frontend - Next.js - React - TypeScript - Tailwind CSS
+
+Backend - Next.js API Routes - Supabase Edge Functions (production)
+
+Database - JSON file store (dev) - Supabase PostgreSQL (production)
+
+Authentication - Local JWT (dev) - Supabase Auth (production)
+
+Payments - Paystack (mock mode for development)
+
+Hosting - Vercel - Supabase
+
+================================================================== 3.
+CORE MODULES
+==================================================================
+
+1.  Authentication
+2.  Dashboard
+3.  Hotspots (multi-location)
+4.  Packages (prepaid)
+5.  Subscription Billing (monthly plans)
+6.  Voucher System
+7.  Customers
+8.  Devices / Device Management
+9.  Sessions
+10. Payments
+11. Customer Self-Service Portal
+12. Captive Portal Builder
+13. Analytics
+14. Reports
+15. Notifications
+16. Router Integration + Router Dashboard
+17. Settings
+18. SaaS Subscription System (platform billing for owners)
+
+================================================================== 4.
+FEATURE SPECIFICATIONS (PRODUCT IDEAS TO SHIP)
+==================================================================
+
+------------------------------------------------------------------ 4.1
+Customer Self-Service Portal
+------------------------------------------------------------------
+
+Customers can:
+- Buy internet (prepaid packages)
+- Renew packages
+- View usage (time / data remaining)
+- Download receipts (PDF or printable)
+- Manage devices linked to their account
+
+Portal entry points:
+- QR scan at hotspot captive redirect
+- Direct /portal/[hotspotId]
+- Self-service account area after identifying via email / voucher code
+
+------------------------------------------------------------------ 4.2
+Voucher System
+------------------------------------------------------------------
+
+Owners and resellers generate prepaid vouchers for offline sale.
+
+Example:
+  Face value: GH₵5
+  Code:       WF-83KD-22P9
+
+Requirements:
+- Batch generate N vouchers for a package or fixed amount
+- Unique codes (human-readable, hard to guess)
+- Status: unused | redeemed | expired | void
+- Optional expiry date and max devices
+- Printable / CSV export for café and shop resellers
+- Redeem on portal: enter code → create session → authorize device
+
+------------------------------------------------------------------ 4.3
+Device Management
+------------------------------------------------------------------
+
+Track per connected / known device:
+- Device name
+- MAC address
+- Phone (optional)
+- Current package
+- Remaining time
+- Current speed (from bandwidth profile / live router stats)
+- Hotspot / location
+- Session status (active | expired | revoked)
+
+Owner UI: searchable device list, revoke / disconnect, force re-auth.
+Customer UI: list and rename own devices (within plan limits).
+
+------------------------------------------------------------------ 4.4
+Subscription Billing
+------------------------------------------------------------------
+
+In addition to prepaid access, support recurring monthly plans.
+
+Examples:
+  Basic     GH₵80/month   Unlimited
+  Premium   GH₵150/month  Unlimited + higher speed
+
+Requirements:
+- Plan catalog (price, speed profile, data cap or unlimited)
+- Paystack recurring or renewal reminders + manual renew
+- Bind subscription to customer + hotspot (or all owner locations)
+- Grace period and suspend on failed renewal
+- Coexist with prepaid packages and vouchers
+
+------------------------------------------------------------------ 4.5
+Router Dashboard
+------------------------------------------------------------------
+
+Per router / hotspot live operations view:
+- Router online / offline
+- Internet / backhaul status
+- Connected users count
+- Bandwidth (up / down)
+- CPU
+- Memory
+- Traffic (time-series)
+
+Fed by adapter getRouterStatus() and telemetry polls. Mock adapter
+returns simulated metrics in development.
+
+------------------------------------------------------------------ 4.6
+Captive Portal Builder
+------------------------------------------------------------------
+
+Hotspot owners customize the customer-facing portal:
+- Logo
+- Brand colors
+- Welcome message
+- Background image
+- Visible packages (and voucher redeem entry)
+- Terms & conditions
+
+Stored as portal_theme / portal_config per hotspot (or owner default
+with per-site overrides). Preview before publish.
+
+------------------------------------------------------------------ 4.7
+Analytics
+------------------------------------------------------------------
+
+Charts and summaries for:
+- Revenue
+- Users (unique customers / devices)
+- Bandwidth (when router telemetry available)
+- Package sales (and voucher redemptions)
+- Peak hours
+
+Existing owner analytics (revenue, payments, sessions, top packages,
+by hotspot) expand to include bandwidth and peak-hour heatmaps.
+
+------------------------------------------------------------------ 4.8
+Multi-location Support
+------------------------------------------------------------------
+
+One owner manages many sites from one dashboard, for example:
+- Accra
+- Kumasi
+- Takoradi
+- Tamale
+
+Each location is a Hotspot (SSID, address, GPS, QR, equipment, portal
+theme). Packages may be owner-wide or assigned per location.
+Analytics, reports, sessions, and payments filterable by location.
+
+================================================================== 5.
+ROUTER ABSTRACTION
+==================================================================
+
+Interface (minimum):
+authorizeDevice() revokeDevice() disconnectDevice() createSession()
+endSession() applyBandwidthProfile() getConnectedDevices()
+getRouterStatus()
+
+Development: update database only; return mock success + mock metrics.
+Production: MikroTik first; then UniFi, pfSense, OpenWrt; Starlink as
+backhaul catalog item (pair with AP/gateway for captive control).
+
+Equipment catalog (searchable): Starlink, MikroTik, UniFi, TP-Link,
+pfSense/OPNsense, OpenWrt, generic, mock.
+
+================================================================== 6.
+PAYMENT LIFECYCLE
+==================================================================
+
+Prepaid / voucher:
+Customer -> Select Package or Enter Voucher -> Paystack (if paid) ->
+Verify -> Store Payment / Mark Voucher Redeemed -> Create Session ->
+Router Adapter -> Internet Active
+
+Subscription:
+Customer -> Choose Monthly Plan -> Paystack Checkout / Mandate ->
+Verify -> Activate Subscription -> Authorize Devices per plan rules
+
+Webhook validation is mandatory. Every payment must be idempotent.
+
+================================================================== 7.
+DATABASE TABLES
+==================================================================
+
+admins users hotspot_owners hotspots routers router_adapters packages
+subscription_plans subscriptions vouchers voucher_batches customers
+devices device_sessions payments payment_callbacks usage_logs
+notifications portal_themes roles permissions audit_logs activity_logs
+system_settings owner_settings
+
+Each table should include: UUID primary key, created_at, updated_at.
+
+================================================================== 8.
+HOTSPOT MANAGEMENT
+==================================================================
+
+Each hotspot stores: Name, SSID, QR Code, Address, GPS Coordinates,
+Router / equipment link, Status, Owner, optional portal theme override.
+
+================================================================== 9.
+PACKAGE MODEL (PREPAID)
+==================================================================
+
+Package fields: Name, Price, Duration, Data Limit, Speed Profile,
+Currency, Enabled. Optional: hotspot assignment list for multi-location
+catalog control.
+
+================================================================== 10.
+CUSTOMER FLOWS
+==================================================================
+
+A. Walk-up prepaid
+Connect Wi-Fi -> Captive / QR -> Portal -> Choose Package -> Paystack ->
+Session -> Internet
+
+B. Voucher
+Connect -> Portal -> Enter code WF-83KD-22P9 -> Redeem -> Session
+
+C. Self-service renew
+Portal account -> View usage -> Renew -> Pay / voucher -> Extend session
+
+D. Monthly subscription
+Portal or owner invite -> Choose Basic/Premium -> Pay -> Recurring access
+
+================================================================== 11.
+SECURITY
+==================================================================
+
+HTTPS, JWT (or Supabase Auth), Row Level Security, Encrypted Secrets,
+Rate Limiting, Webhook Signature Validation, Audit Logs, voucher code
+entropy and single-use redemption locks.
+
+================================================================== 12.
+API DESIGN
+==================================================================
+
+/api/auth /api/payments /api/hotspots /api/packages /api/customers
+/api/devices /api/sessions /api/vouchers /api/subscriptions /api/router
+/api/analytics /api/reports /api/settings /api/portal /api/portal-themes
+
+All endpoints: JSON, REST, authentication where required.
+
+================================================================== 13.
+UI SCREENS
+==================================================================
+
+Owner:
+Landing, Login, Signup, Dashboard, Packages, Subscriptions, Vouchers,
+Customers, Devices, Payments, Analytics, Reports, Hotspots, Router
+Dashboard, Captive Portal Builder, Notifications, Settings
+
+Customer:
+Captive / Portal, Checkout, Payment Success / Failed, Self-Service
+(usage, receipts, devices, renew), Voucher Redeem
+
+================================================================== 14.
+DEVELOPMENT ROADMAP
+==================================================================
+
+Phase 1 (done) - Authentication - Dashboard - Packages - QR Codes -
+Hotspots
+
+Phase 2 (done) - Paystack / mock payments - Sessions - Mock Router -
+Equipment catalog (Starlink, MikroTik, …)
+
+Phase 3 (done) - Analytics (core) - Reports CSV - Notifications -
+Owner Settings
+
+Phase 4 (done / lab) - Live MikroTik RouterOS REST bridge - Per-router
+credentials - Fail-closed authorize - Captive portal MAC capture
+
+Phase 5 (done) - Captive Portal Builder - Customer Self-Service (usage,
+receipts, renew, devices) - Voucher System
+
+Phase 6 (done) - Subscription Billing (monthly plans) - Peak-hour /
+bandwidth analytics - Per-hotspot package assignment
+
+Phase 7 (done / ongoing) - Single-company deployment confirmed - MikroTik
+RouterOS REST live path (status, hotspot active, IP-binding authorize)
+
+Optional next - Simple queues for speed profiles - Printable voucher
+sheets - Paystack recurring mandates
+
+================================================================== 15.
+IMPLEMENTATION STATUS (v2.1)
+==================================================================
+
+Shipped or partial:
+- Owner auth, dashboard, packages, multi-hotspot locations, QR portal
+  checkout, payments, sessions, analytics (revenue/users/packages),
+  reports, notifications, settings, equipment search/attach catalog,
+  mock router layer
+
+Not yet shipped (specified above):
+- Full customer self-service (renew, usage, receipts, device manage)
+- Voucher generate / redeem
+- Rich device management screen
+- Monthly subscription plans
+- Live router dashboard telemetry UI
+- Captive portal builder (logo, colors, T&Cs, …)
+- Bandwidth + peak-hours analytics depth
+
+================================================================== 16.
+AI IMPLEMENTATION RULES
+==================================================================
+
+- Use TypeScript everywhere.
+- Keep business logic independent of router implementation.
+- Use repository/service architecture.
+- Never hardcode secrets.
+- Use Supabase Row Level Security in production.
+- Write reusable React components.
+- Use server actions or API routes only for privileged operations.
+- Every feature should have validation and error handling.
+- Every payment must be idempotent.
+- All modules should be independently testable.
+- Prefer owner-wide packages with optional per-location assignment.
+- Document new modules in this SRS before large builds.
+
+================================================================== 17.
+LONG TERM VISION
+==================================================================
+
+WiFiHub Ghana should be the operational backbone for a Ghana Wi-Fi
+business: one company configures packages and subscriptions, sells
+vouchers through cafés and shops, customizes captive portals, accepts
+Paystack, generates QR codes, manages devices across its locations, and
+connects Starlink / MikroTik / UniFi gear with minimal setup.
