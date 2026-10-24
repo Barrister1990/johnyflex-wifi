@@ -30,23 +30,23 @@ function parseEnvFile(path: string, into: Record<string, string>): boolean {
 }
 
 function candidateEnvPaths(cwd: string): string[] {
-  const explicit = process.env.WIFIHUB_ENV_FILE?.trim();
-  const root = process.env.WIFIHUB_ROOT?.trim();
-  // Later files win — keep `.env.local` after `.env` so empty example keys
-  // cannot overwrite real WireGuard values.
+  const explicit =
+    process.env.JOHNNYFLEX_ENV_FILE?.trim() ||
+    process.env.WIFIHUB_ENV_FILE?.trim();
+  const root =
+    process.env.JOHNNYFLEX_ROOT?.trim() || process.env.WIFIHUB_ROOT?.trim();
+  // Later files win — keep `.env.local` after `.env`.
+  // Do NOT load sibling WiFiHub paths; that overwrites JohnnyFlex APP_URL etc.
   const paths = [
     explicit,
     root ? join(root, ".env") : null,
     root ? join(root, ".env.local") : null,
     join(cwd, ".env"),
     join(cwd, ".env.local"),
-    // Common VPS layouts from the setup guide (path names have varied)
-    "/var/www/wifihub/.env",
-    "/var/www/wifihub-gh/.env",
-    "/var/www/wifihub/.env",
-    "/var/www/wiffihub/.env.local",
-    "/var/www/wifihub-gh/.env.local",
-    "/var/www/wifihub/.env.local",
+    "/var/www/johnyflex-wifi/.env",
+    "/var/www/johnyflex-wifi/.env.local",
+    "/var/www/johnnyflex/.env",
+    "/var/www/johnnyflex/.env.local",
   ].filter((p): p is string => Boolean(p));
 
   return [...new Set(paths)];
