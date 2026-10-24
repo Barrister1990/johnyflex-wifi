@@ -8,7 +8,6 @@ import { getVendorById, listVendorsByOwner } from "@/lib/repositories/vendors";
 import * as voucherRepo from "@/lib/repositories/vouchers";
 import { isUsableClientMac, normalizeMac } from "@/lib/mac";
 import { resolvePortalEmail } from "@/lib/portal-guest-email";
-import { hotspotHasLiveMikroTik } from "@/lib/router/session-access";
 import { requireUser } from "@/lib/services/auth";
 import { provisionAccessFromPayment } from "@/lib/services/payments";
 import type { VoucherListItem } from "@/lib/types";
@@ -156,10 +155,7 @@ export async function redeemVoucher(raw: unknown) {
   }
 
   const clientMac = normalizeMac(data.macAddress);
-  if (
-    (await hotspotHasLiveMikroTik(hotspot.id)) &&
-    !isUsableClientMac(clientMac)
-  ) {
+  if (!isUsableClientMac(clientMac)) {
     throw new Error(
       "Connect to this hotspot’s Wi‑Fi first so your device MAC is known, then redeem again.",
     );

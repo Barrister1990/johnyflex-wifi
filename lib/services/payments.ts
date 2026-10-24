@@ -38,17 +38,18 @@ export type ConfirmPaymentResult = {
 };
 
 async function requireClientMacForLiveRouter(
-  hotspotId: string,
+  _hotspotId: string,
   raw: string | undefined,
 ): Promise<string | null> {
   const mac = normalizeMac(raw);
-  const live = await hotspotHasLiveMikroTik(hotspotId);
-  if (live && !isUsableClientMac(mac)) {
+  // Always require a real MAC before checkout — payments without Wi‑Fi
+  // connection cannot be unlocked on MikroTik after Paystack returns.
+  if (!isUsableClientMac(mac)) {
     throw new Error(
       "Connect to this hotspot’s Wi‑Fi first so your device MAC is known, then try again.",
     );
   }
-  return isUsableClientMac(mac) ? mac : null;
+  return mac;
 }
 
 function macFromMetadata(

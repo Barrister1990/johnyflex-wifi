@@ -11,7 +11,6 @@ import {
 import { getProfileByIdService, profileToPublic } from "@/lib/repositories/profiles";
 import { isUsableClientMac, normalizeMac } from "@/lib/mac";
 import { resolvePortalEmail } from "@/lib/portal-guest-email";
-import { hotspotHasLiveMikroTik } from "@/lib/router/session-access";
 import { requireUser, updateCurrentUserProfile } from "@/lib/services/auth";
 import { provisionAccessFromPayment } from "@/lib/services/payments";
 import { expireActiveFreeModeSessions } from "@/lib/services/session-expiry";
@@ -223,10 +222,7 @@ export async function claimFreeAccess(raw: unknown) {
   }
 
   const clientMac = normalizeMac(data.macAddress);
-  if (
-    (await hotspotHasLiveMikroTik(hotspot.id)) &&
-    !isUsableClientMac(clientMac)
-  ) {
+  if (!isUsableClientMac(clientMac)) {
     throw new Error(
       "Connect to this hotspot’s Wi‑Fi first so your device MAC is known, then try again.",
     );

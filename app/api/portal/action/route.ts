@@ -15,7 +15,6 @@ export async function POST(request: Request) {
   const hotspotSlug = String(form.get("hotspotSlug") ?? hotspotId).trim();
   const macRaw = String(form.get("macAddress") ?? "").trim();
   const macAddress = macRaw || undefined;
-  const connected = String(form.get("connectedToWifi") ?? "") === "1";
 
   const portalBase = `${resolvePublicOrigin(request)}/portal/${encodeURIComponent(hotspotSlug)}`;
   const back = (message: string) =>
@@ -69,12 +68,12 @@ export async function POST(request: Request) {
     }
 
     if (intent === "free") {
-      if (!macAddress && !connected) {
+      if (!macAddress) {
         return back("Join this Wi‑Fi first, then try again.");
       }
       const result = await claimFreeAccess({
         hotspotId,
-        ...(macAddress ? { macAddress } : {}),
+        macAddress,
       });
       return NextResponse.redirect(
         `${portalBase}/success?reference=${encodeURIComponent(result.payment.reference)}`,

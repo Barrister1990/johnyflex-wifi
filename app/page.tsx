@@ -15,7 +15,7 @@ export default async function HomePage({ searchParams }: HomeProps) {
   const qs = q.toString();
   redirect(
     qs
-      ? `/portal/johnny-flex-wifi?${qs}`
-      : "/portal/johnny-flex-wifi",
+      ? `/portal/johnnyflex-wifi?${qs}`
+      : "/portal/johnnyflex-wifi",
   );
 }

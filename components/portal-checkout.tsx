@@ -337,8 +337,9 @@ export function PortalCheckout({
   }, [freeActive]);
 
   const onNetworkDetected = Boolean(clientMac);
-  const [connectedToWifi, setConnectedToWifi] = useState(onNetworkDetected);
-  const networkReady = onNetworkDetected || connectedToWifi;
+  // Only a captive-portal MAC counts as connected — no checkbox bypass.
+  const networkReady = onNetworkDetected;
+  const connectedToWifi = onNetworkDetected;
 
   const selectedPackage = useMemo(() => {
     if (pick?.kind !== "package") return null;
@@ -357,11 +358,15 @@ export function PortalCheckout({
   }
 
   function guardMac(): boolean {
-    if (requireMac && !clientMac) {
+    if (!clientMac) {
       setShowWifiModal(true);
-      setError("");
+      setError(
+        `Join ${hotspot.ssid} and open this page from the Wi‑Fi login screen before paying.`,
+      );
       return false;
     }
+    // requireMac reserved for live MikroTik unlock paths; MAC already enforced above.
+    void requireMac;
     return true;
   }
 
@@ -627,23 +632,10 @@ export function PortalCheckout({
                     Free Wi‑Fi is available
                   </p>
                   <p className="mt-1 text-[13px] leading-relaxed opacity-90">
-                    Tap Connect to get online
-                    {freeRemaining ? ` · ${freeRemaining}` : ""}.
+                    {onNetworkDetected
+                      ? `Tap Connect to get online${freeRemaining ? ` · ${freeRemaining}` : ""}.`
+                      : `Join ${hotspot.ssid} and open this page from the Wi‑Fi login screen first.`}
                   </p>
-                  {!onNetworkDetected ? (
-                    <label className="mt-3 flex min-h-11 cursor-pointer flex-row items-center gap-3 border-t border-land-ink/10 pt-3 text-[13px] font-medium">
-                      <input
-                        type="checkbox"
-                        name="connectedToWifiUi"
-                        defaultChecked={connectedToWifi}
-                        onChange={(event) =>
-                          setConnectedToWifi(event.target.checked)
-                        }
-                        className="h-5 w-5 shrink-0 accent-current"
-                      />
-                      <span>I&apos;m on {hotspot.ssid}</span>
-                    </label>
-                  ) : null}
                 </>
               ) : onNetworkDetected ? (
                 <>
@@ -667,18 +659,17 @@ export function PortalCheckout({
                     <li>2. Open this page from the Wi‑Fi login screen</li>
                     <li>3. Pick a package or enter a voucher</li>
                   </ol>
-                  <label className="mt-3 flex min-h-11 cursor-pointer flex-row items-center gap-3 border-t border-land-ink/10 pt-3 text-[13px] font-medium">
-                    <input
-                      type="checkbox"
-                      name="connectedToWifiUi"
-                      defaultChecked={connectedToWifi}
-                      onChange={(event) =>
-                        setConnectedToWifi(event.target.checked)
-                      }
-                      className="h-5 w-5 shrink-0 accent-current"
-                    />
-                    <span>I&apos;m on {hotspot.ssid}</span>
-                  </label>
+                  <p className="mt-3 border-t border-land-ink/10 pt-3 text-[12px] font-medium opacity-90">
+                    Payment stays locked until your phone opens this portal from
+                    the captive login (so we can see your device).
+                  </p>
+                  <button
+                    type="button"
+                    className="portal-link mt-2"
+                    onClick={() => setShowWifiModal(true)}
+                  >
+                    How do I connect?
+                  </button>
                 </>
               )}
             </div>
