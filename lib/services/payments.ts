@@ -89,6 +89,11 @@ export async function initializePayment(raw: unknown): Promise<{
       "This hotspot is under maintenance. Purchases are paused — try again shortly.",
     );
   }
+  if (hotspot.paystackEnabled === false) {
+    throw new Error(
+      "Online package purchase is disabled at this location. Redeem a voucher instead.",
+    );
+  }
 
   const clientMac = await requireClientMacForLiveRouter(
     hotspot.id,

@@ -26,6 +26,7 @@ export const hotspotSchema = z.object({
   routerId: z.string().uuid().nullable().optional(),
   latitude: z.number().min(-90).max(90).nullable().optional(),
   longitude: z.number().min(-180).max(180).nullable().optional(),
+  paystackEnabled: z.boolean().optional(),
   equipmentCatalogId: z.string().min(1).optional(),
   equipmentLabel: z.string().trim().max(80).optional(),
   equipmentHost: z.string().trim().max(120).nullable().optional(),

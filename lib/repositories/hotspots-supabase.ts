@@ -23,6 +23,7 @@ type HotspotRow = {
   free_mode_starts_at?: string | null;
   free_mode_ends_at?: string | null;
   free_mode_package_id?: string | null;
+  paystack_enabled?: boolean | null;
   created_at: string;
   updated_at: string;
 };
@@ -44,6 +45,8 @@ function mapHotspot(row: HotspotRow): Hotspot {
     freeModeStartsAt: row.free_mode_starts_at ?? null,
     freeModeEndsAt: row.free_mode_ends_at ?? null,
     freeModePackageId: row.free_mode_package_id ?? null,
+    // Default true when column missing (pre-migration rows / older caches)
+    paystackEnabled: row.paystack_enabled !== false,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -166,6 +169,7 @@ export async function updateHotspot(
       | "freeModeStartsAt"
       | "freeModeEndsAt"
       | "freeModePackageId"
+      | "paystackEnabled"
     >
   >,
 ): Promise<Hotspot | null> {
@@ -200,6 +204,9 @@ export async function updateHotspot(
   }
   if (patch.freeModePackageId !== undefined) {
     dbPatch.free_mode_package_id = patch.freeModePackageId;
+  }
+  if (patch.paystackEnabled !== undefined) {
+    dbPatch.paystack_enabled = patch.paystackEnabled;
   }
 
   const supabase = await createServerSupabaseClient();

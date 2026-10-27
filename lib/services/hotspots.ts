@@ -136,6 +136,7 @@ export async function updateHotspot(
     routerId,
     latitude: data.latitude,
     longitude: data.longitude,
+    paystackEnabled: data.paystackEnabled,
   });
   if (!updated) throw new Error("Hotspot not found");
 

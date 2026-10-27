@@ -154,10 +154,23 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingFreeMode, setSavingFreeMode] = useState(false);
+  const [savingPaystack, setSavingPaystack] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [testingMikroTik, setTestingMikroTik] = useState(false);
-  const [hotspots, setHotspots] = useState<{ id: string; name: string; freeModeEnabled: boolean; freeModeStartsAt: string | null; freeModeEndsAt: string | null; freeModePackageId: string | null }[]>([]);
+  const [hotspots, setHotspots] = useState<
+    {
+      id: string;
+      name: string;
+      freeModeEnabled: boolean;
+      freeModeStartsAt: string | null;
+      freeModeEndsAt: string | null;
+      freeModePackageId: string | null;
+      paystackEnabled: boolean;
+    }[]
+  >([]);
+  const [paystackLocationId, setPaystackLocationId] = useState("");
+  const [paystackEnabled, setPaystackEnabled] = useState(true);
 
   async function load() {
     setLoading(true);
@@ -175,25 +188,35 @@ export default function SettingsPage() {
     const s = data.settings as SettingsPayload;
     setSettings(s);
     if (hRes.ok && Array.isArray(hData.hotspots)) {
-      setHotspots(
-        hData.hotspots.map(
-          (h: {
-            id: string;
-            name: string;
-            freeModeEnabled?: boolean;
-            freeModeStartsAt?: string | null;
-            freeModeEndsAt?: string | null;
-            freeModePackageId?: string | null;
-          }) => ({
-            id: h.id,
-            name: h.name,
-            freeModeEnabled: Boolean(h.freeModeEnabled),
-            freeModeStartsAt: h.freeModeStartsAt ?? null,
-            freeModeEndsAt: h.freeModeEndsAt ?? null,
-            freeModePackageId: h.freeModePackageId ?? null,
-          }),
-        ),
+      const mapped = hData.hotspots.map(
+        (h: {
+          id: string;
+          name: string;
+          freeModeEnabled?: boolean;
+          freeModeStartsAt?: string | null;
+          freeModeEndsAt?: string | null;
+          freeModePackageId?: string | null;
+          paystackEnabled?: boolean;
+        }) => ({
+          id: h.id,
+          name: h.name,
+          freeModeEnabled: Boolean(h.freeModeEnabled),
+          freeModeStartsAt: h.freeModeStartsAt ?? null,
+          freeModeEndsAt: h.freeModeEndsAt ?? null,
+          freeModePackageId: h.freeModePackageId ?? null,
+          paystackEnabled: h.paystackEnabled !== false,
+        }),
       );
+      setHotspots(mapped);
+      setPaystackLocationId((prev) => {
+        const nextId =
+          prev && mapped.some((h: { id: string }) => h.id === prev)
+            ? prev
+            : (mapped[0]?.id ?? "");
+        const selected = mapped.find((h: { id: string }) => h.id === nextId);
+        setPaystackEnabled(selected ? selected.paystackEnabled : true);
+        return nextId;
+      });
     }
     setProfile({
       name: s.profile.name,
@@ -321,6 +344,39 @@ export default function SettingsPage() {
       await load();
     }
     setSavingFreeMode(false);
+  }
+
+  function selectPaystackLocation(nextId: string) {
+    setPaystackLocationId(nextId);
+    const site = hotspots.find((h) => h.id === nextId);
+    setPaystackEnabled(site ? site.paystackEnabled : true);
+  }
+
+  async function onSavePaystack(e: FormEvent) {
+    e.preventDefault();
+    if (!paystackLocationId) {
+      toast.error("Select a location", "Choose which site to update.");
+      return;
+    }
+    setSavingPaystack(true);
+    const res = await fetch(`/api/hotspots/${paystackLocationId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paystackEnabled }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      toast.error("Could not save Paystack setting", data.error);
+    } else {
+      toast.success(
+        paystackEnabled ? "Paystack on" : "Paystack off",
+        paystackEnabled
+          ? "Package checkout is available on this portal."
+          : "Package tab hidden — voucher redeem only.",
+      );
+      await load();
+    }
+    setSavingPaystack(false);
   }
 
   function selectFreeModeLocation(nextId: string) {
@@ -723,6 +779,64 @@ export default function SettingsPage() {
           Click <span className="font-medium text-secondary">Save profile</span>{" "}
           above to persist these toggles.
         </p>
+      </Section>
+
+      <Section
+        title="Paystack packages"
+        description="Per location: turn online package purchase on or off. Off hides the Packages tab — voucher redeem and Activate stay available."
+        action={
+          paystackEnabled ? (
+            <span className="rounded-full bg-success/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-success">
+              Packages on
+            </span>
+          ) : (
+            <span className="rounded-full bg-inset px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-secondary">
+              Voucher only
+            </span>
+          )
+        }
+      >
+        <form onSubmit={onSavePaystack} className="space-y-3">
+          <label className="flex w-full flex-col gap-1 md:gap-1.5">
+            <span className="text-2xs font-medium text-primary md:text-xs-tight">
+              Location
+            </span>
+            <select
+              className="rounded-xl border border-border bg-canvas px-3 py-2 text-xs-tight"
+              value={paystackLocationId}
+              onChange={(e) => selectPaystackLocation(e.target.value)}
+              required
+            >
+              {hotspots.length === 0 ? (
+                <option value="">No locations yet</option>
+              ) : (
+                hotspots.map((h) => (
+                  <option key={h.id} value={h.id}>
+                    {h.name}
+                    {h.paystackEnabled ? "" : " (voucher only)"}
+                  </option>
+                ))
+              )}
+            </select>
+          </label>
+
+          <ToggleRow
+            label="Enable Paystack packages"
+            description="When off, visitors only see voucher redeem and Activate — no package list or Paystack checkout."
+            checked={paystackEnabled}
+            onChange={setPaystackEnabled}
+          />
+
+          <div className="flex justify-end pt-1">
+            <Button
+              type="submit"
+              size="sm"
+              disabled={savingPaystack || !paystackLocationId}
+            >
+              {savingPaystack ? "Saving…" : "Save Paystack setting"}
+            </Button>
+          </div>
+        </form>
       </Section>
 
       <Section

@@ -108,6 +108,11 @@ export type Hotspot = {
   freeModeStartsAt: string | null;
   freeModeEndsAt: string | null;
   freeModePackageId: string | null;
+  /**
+   * When true (default), portal shows Paystack package checkout.
+   * When false, package tab is hidden — voucher redeem only.
+   */
+  paystackEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 };

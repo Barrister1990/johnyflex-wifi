@@ -144,12 +144,22 @@ export async function getPortalData(slugOrId: string): Promise<{
     throw new Error("Hotspot not found");
   }
 
-  const packages = (
-    await listEnabledPackagesByOwner(hotspot.ownerId)
-  ).filter((p) => packageVisibleAtHotspot(p, hotspot.id));
+  const paystackEnabled = hotspot.paystackEnabled !== false;
 
-  const theme = await resolvePortalTheme(hotspot.ownerId, hotspot.id);
-  const subscriptionPlans = await listPortalSubscriptionPlans(hotspot.id);
+  const packages = paystackEnabled
+    ? (
+        await listEnabledPackagesByOwner(hotspot.ownerId)
+      ).filter((p) => packageVisibleAtHotspot(p, hotspot.id))
+    : [];
+
+  const baseTheme = await resolvePortalTheme(hotspot.ownerId, hotspot.id);
+  const theme = {
+    ...baseTheme,
+    showPackages: paystackEnabled && baseTheme.showPackages,
+  };
+  const subscriptionPlans = paystackEnabled
+    ? await listPortalSubscriptionPlans(hotspot.id)
+    : [];
   const liveMikroTik = await hotspotHasLiveMikroTik(hotspot.id);
   const freeMode = await getOwnerFreeModeForHotspot(slugOrId);
 

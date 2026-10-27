@@ -110,6 +110,7 @@ export async function updateHotspot(
       | "freeModeStartsAt"
       | "freeModeEndsAt"
       | "freeModePackageId"
+      | "paystackEnabled"
     >
   >,
 ): Promise<Hotspot | null> {
